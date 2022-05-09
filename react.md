@@ -104,6 +104,15 @@ JS的扩展语法，需要使用babel进行转义。
     <script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
     // 交给babel编译
     <script type="text/babel">
+        //创建一个span元素
+        // var span = React.createElement("span", {}, "一个span元素");
+        // var span = <span>一个span元素</span>
+        //创建一个H1元素
+        // var h1 = React.createElement("h1", {
+        //     title: "第一个React元素"
+        // }, "Hello", "World", span);
+        // var h1 = <h1 title="第一个React元素">Hello World <span>一个span元素</span></h1>;
+        // console.log(h1);
         ReactDOM.render(<h1 title="第一个React元素">Hello World <span>一个span元素</span></h1>, document.getElementById("root"));
     </script>
 ```
@@ -121,7 +130,7 @@ JS的扩展语法，需要使用babel进行转义。
 
 因为JSX表达式最终要编译成React.createElement
 
-react工程里，支持js和jsx文件
+react工程里，支持js和jsx文件,要需要配置emmet,才更友好。
 
 ## 开发环境搭建
 
@@ -251,18 +260,18 @@ React Developer Tools
 2. 对于类组件，属性会作为一个对象的属性，传递给构造函数的参数
 ```js
    constructor(props) {
-        super(props); // this.props = props;
+        super(props); // this.props = props;由于类组件继承自React.Components,需要手动调用父类的构造函数
         console.log(props, this.props, props === this.props);
     }
 ```
 
-注意：组件的属性，应该使用小驼峰命名法
+注意：组件的属性，应该使用小驼峰命名法，传递boolean属性可以省略属性值
 
 **组件无法改变自身的属性**。
 
-之前学习的React元素，本质上，就是一个组件（内置组件）
+之前学习的React元素，可以对比内置组件和手写组件的props，本质上，就是一个组件（内置组件）
 
-React中的哲学：数据属于谁，谁才有权力改动
+React中的哲学：数据属于谁，谁才有权力改动，虽然react没有深层次监控传递过来的属性，但是千万不要改动。
 
 **React中的数据，自顶而下流动**
 
@@ -272,7 +281,7 @@ React中的哲学：数据属于谁，谁才有权力改动
 
 组件状态仅在类组件中有效
 
-状态（state），本质上是类组件的一个属性，是一个对象
+状态（state），本质上是类组件的自身一个属性，是一个对象
 
 **状态初始化**
 ```js
@@ -407,7 +416,7 @@ handleClick = () => {
         });
     }
 ```
-4. 如果新的状态要根据之前的状态进行运算，使用函数的方式改变状态（setState的第一个函数,）
+4. 如果新的状态要根据之前的状态进行运算，使用函数的方式改变状态（setState的第一个参数为函数）
 ```js
 handleClick = () => {
         this.setState(cur => {
@@ -432,7 +441,7 @@ handleClick = () => {
     }
 ```
 
-React会对异步的setState进行优化，将多次setState进行合并（将多次状态改变完成后，再统一对state进行改变，然后触发render）
+React会对**异步的**setState进行优化，将多次setState进行合并（将多次状态改变完成后，再统一对state进行改变，然后触发render）
 
 ## 生命周期
 
@@ -1024,7 +1033,7 @@ React中的上下文特点：
    1. 要求：必须拥有静态属性 contextType , 应赋值为创建的上下文对象
 2. 在类组件和函数组件,使用Consumer来获取上下文数据
    1. Consumer是一个组件
-   2. 它的子节点，是一个函数（它的props.children需要传递一个函数）
+   2. 它的子节点，是一个函数（它的props.children需要传递一个函数，函数返回需要展示的组件））
 
 ```jsx
 import React, { Component } from 'react'
@@ -1080,8 +1089,39 @@ export default class NewContext extends Component {
 
 **注意细节**
 
-如果，上下文提供者（Context.Provider）中的value属性发生变化(Object.is比较)，会导致该上下文提供的所有后代元素全部重新渲染，无论该子元素是否有优化（无论shouldComponentUpdate函数返回什么结果）
+如果，上下文提供者（Context.Provider）中的value属性发生变化(Object.is比较)，会导致该上下文提供的所有后代元素全部重新渲染，无论该子元素是否有优化（无论shouldComponentUpdate函数返回什么结果，不会运行shouldComponentUpdate这个函数）
 
+```js
+export default class NewContext extends Component {
+
+    state = {
+        ctx: {
+            a: 0,
+            b: "abc",
+            changeA: (newA) => {
+                this.setState({
+                    a: newA
+                })
+            }
+        }
+    }
+
+    render() {
+        return (
+            <ctx.Provider value={this.state.ctx}>
+                <div>
+                    <ChildB />
+
+                    <button onClick={() => {
+                        this.setState({})
+                    }}>父组件的按钮，a加1</button>
+                </div>
+            </ctx.Provider>
+        )
+    }
+}
+//通过把ctx的数据作为state的一部分来实现性能优化，否则每次强制刷新，传入的都是一个新的对象，应用值不同就一定会重新渲染
+```
 ### 上下文的应用场景
 
 编写一套组件（有多个组件），这些组件之间需要相互配合才能最终完成功能
