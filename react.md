@@ -745,6 +745,11 @@ PropTypes.exact({...})：//对象必须精确匹配传递的数据
 
 ## HOC 高阶组件
 
+通常我们说的组件是 类组件或者函数组件，应该把元素和组件区分开来。
+```<Comp />``` 
+React Component Element 是类组件的实例对象或者是函数组件的调用结果
+```<div />``` React Html Element 
+
 HOF：Higher-Order Function, 高阶函数，以函数作为参数，并返回一个函数
 HOC: Higher-Order Component, 高阶组件，以组件作为参数，并返回一个组件
 
@@ -817,7 +822,7 @@ export default class App extends React.Component {
 
 **注意**
 
-1. 不要在render中使用高阶组件
+1. 不要在render或者函数组件内部中使用高阶组件,会非常浪费性能，每次重新创建组件。
 2. 不要在高阶组件内部更改传入的组件
 
 
