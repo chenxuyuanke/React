@@ -912,14 +912,14 @@ export default class Comp extends Component {
 
 ## Ref转发
 
-在高阶组件中往往要用到ref转发(forwardRef)
+在高阶组件中往往要用到ref转发(forwardRef),让组件内部手动控制ref要挂载的元素
 
 forwardRef方法：
 
+- 在函数组件中转发
 1. 参数，传递的是函数组件，不能是类组件，并且，函数组件需要有第二个参数来得到ref
 2. 返回值，返回一个新的组件
 
-- 在函数组件中转发
 ```js
 function A(props, ref) {
     return <h1 ref={ref}>
@@ -951,6 +951,9 @@ export default class App extends React.Component {
 }
 ```
 - 在类组件中转发
+1. 参数，传递的是一个函数，有props和ref两个参数，
+2. 返回值，返回一个新的组件，返回组件的ref必须是其他名字（如abc）否则直接使用ref会得到组件A的实例
+
 ```js
 class A extends React.Component {
     render() {
@@ -962,7 +965,7 @@ class A extends React.Component {
 }
 
 const NewA = React.forwardRef((props, ref) => {
-    return <A {...props} abc={ref} />
+    return <A {...props} abc={ref} />  
 })
 
 export default class App extends React.Component {
@@ -984,6 +987,8 @@ export default class App extends React.Component {
     }
 }
 ```
+
+其实用props也可以实现ref转发，但是需要改动内部组件的代码，且不能直接使用ref属性名，不容易理解。
 
 ## Context
 
@@ -1129,7 +1134,7 @@ export default class NewContext extends Component {
 ```
 ### 上下文的应用场景
 
-编写一套组件（有多个组件），这些组件之间需要相互配合才能最终完成功能
+编写一套组件（有多个组件），这些组件之间有数据交互和事件触发，所以需要相互配合才能最终完成功能
 
 比如，我们要开发一套表单组件，使用方式如下
 
@@ -1276,7 +1281,7 @@ export default function Test() {
 
 ## Portals
 
-插槽：将一个React元素渲染到指定的DOM容器中
+插槽：将一个React元素渲染到指定的DOM容器中,需要改变真实的dom结构，如蒙层，弹框
 
 ReactDOM.createPortal(React元素, 真实的DOM容器)，该函数返回一个React元素
 
@@ -1369,14 +1374,27 @@ export default class ErrorBound extends PureComponent {
     <Comp1 />
 </ErrorBound>
 ```
+**错误堆栈** 从底层一层层往外抛出错误，包括内置组件和自定义组件
+```
+"
+    in Comp2 (at App.js:11)
+    in div (at App.js:5)
+    in Comp1 (at App.js:43)
+    in ErrorBound (at App.js:42)
+    in div (at App.js:41)
+    in App (at src/index.js:5)"
+```
 
 **细节**
 
 某些错误，错误边界组件无法捕获
 
 1. 自身的错误
-2. 异步的错误
-3. 事件中的错误
+2. 异步的错误 
+3. 事件中的错误 
+以上错误得用try/catch错误
+异步和事件中 改变数据导致重新渲染时发生错误是可以捕获的。
+
 
 总结：仅处理渲染子组件期间的同步错误
 
