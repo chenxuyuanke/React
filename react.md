@@ -1567,9 +1567,9 @@ React为了提高对比效率，做出以下假设
 2. 不同的节点类型会生成不同的结构
    1. 相同的节点类型：节点本身类型相同，如果是由React元素生成，type值还必须一致
    2. 其他的，都属于不相同的节点类型
-3. 多个兄弟通过唯一标识（key）来确定对比的新节点
+3. 多个兄弟通过唯一标识（key）来确定对比的新节点,如果没有key值是通过原来的index来对比
 
-key值的作用：用于通过旧节点，寻找对应的新节点，如果某个旧节点有key值，则其更新时，会寻找相同层级中的相同key值的节点，进行对比。
+key值的作用：用于通过旧节点，寻找对应的新节点，如果某个旧节点有key值，则其更新时，会寻找相同层级中的相同key值的节点，进行对比.
 
 **key值应该在一个范围内唯一（兄弟节点中），并且应该保持稳定**
 
@@ -1790,6 +1790,30 @@ export default function App() {
 
             setN(prevN => prevN + 1); //传入的函数，在事件完成之后统一运行
             setN(prevN => prevN + 1);
+        }}>+</button>
+    </div>
+}
+```
+
+9. 如果你想要在使用setState之后，使用改变之后的值去调用一些回调函数，应该使用如下方法。
+
+```js
+export default function App() {
+    console.log("App render")
+    const [n, setN] = useState(0);
+
+    useEffect(()=>{
+        console.log(n)
+    },[n])
+    // 在改变状态后触发回调函数
+    return <div>
+        <button onClick={() => {
+            setN(prevN => prevN - 1); //传入的函数，在事件完成之后统一运行
+        }}>-</button>
+        <span>{n}</span>
+        <button onClick={() => {
+
+            setN(prevN => prevN + 1); //传入的函数，在事件完成之后统一运行
         }}>+</button>
     </div>
 }
