@@ -912,14 +912,14 @@ export default class Comp extends Component {
 
 ## Ref转发
 
-在高阶组件中往往要用到ref转发(forwardRef)
+在高阶组件中往往要用到ref转发(forwardRef),让组件内部手动控制ref要挂载的元素
 
 forwardRef方法：
 
+- 在函数组件中转发
 1. 参数，传递的是函数组件，不能是类组件，并且，函数组件需要有第二个参数来得到ref
 2. 返回值，返回一个新的组件
 
-- 在函数组件中转发
 ```js
 function A(props, ref) {
     return <h1 ref={ref}>
@@ -951,6 +951,9 @@ export default class App extends React.Component {
 }
 ```
 - 在类组件中转发
+1. 参数，传递的是一个函数，有props和ref两个参数，
+2. 返回值，返回一个新的组件，返回组件的ref必须是其他名字（如abc）否则直接使用ref会得到组件A的实例
+
 ```js
 class A extends React.Component {
     render() {
@@ -962,7 +965,7 @@ class A extends React.Component {
 }
 
 const NewA = React.forwardRef((props, ref) => {
-    return <A {...props} abc={ref} />
+    return <A {...props} abc={ref} />  
 })
 
 export default class App extends React.Component {
@@ -984,6 +987,8 @@ export default class App extends React.Component {
     }
 }
 ```
+
+其实用props也可以实现ref转发，但是需要改动内部组件的代码，且不能直接使用ref属性名，不容易理解。
 
 ## Context
 
@@ -1129,7 +1134,7 @@ export default class NewContext extends Component {
 ```
 ### 上下文的应用场景
 
-编写一套组件（有多个组件），这些组件之间需要相互配合才能最终完成功能
+编写一套组件（有多个组件），这些组件之间有数据交互和事件触发，所以需要相互配合才能最终完成功能
 
 比如，我们要开发一套表单组件，使用方式如下
 
@@ -1276,7 +1281,7 @@ export default function Test() {
 
 ## Portals
 
-插槽：将一个React元素渲染到指定的DOM容器中
+插槽：将一个React元素渲染到指定的DOM容器中,需要改变真实的dom结构，如蒙层，弹框
 
 ReactDOM.createPortal(React元素, 真实的DOM容器)，该函数返回一个React元素
 
@@ -1369,17 +1374,52 @@ export default class ErrorBound extends PureComponent {
     <Comp1 />
 </ErrorBound>
 ```
+**错误堆栈** 从底层一层层往外抛出错误，包括内置组件和自定义组件
+```
+"
+    in Comp2 (at App.js:11)
+    in div (at App.js:5)
+    in Comp1 (at App.js:43)
+    in ErrorBound (at App.js:42)
+    in div (at App.js:41)
+    in App (at src/index.js:5)"
+```
 
 **细节**
 
 某些错误，错误边界组件无法捕获
 
 1. 自身的错误
-2. 异步的错误
-3. 事件中的错误
+2. 异步的错误 
+3. 事件中的错误 
+以上错误得用try/catch错误
+异步和事件中 改变数据导致重新渲染时发生错误是可以捕获的。
+
 
 总结：仅处理渲染子组件期间的同步错误
 
+## React中的事件
+
+这里的事件：React内置的DOM组件中的事件
+
+1. 给document注册事件
+2. 几乎所有的元素的事件处理，均在document的事件中处理
+   1. 一些不冒泡的事件，是直接在元素上监听
+   2. 一些document上面没有的事件，直接在元素上监听
+3. 在document的事件处理，React会根据虚拟DOM树的完成事件函数的调用
+4. React的事件参数，并非真实的DOM事件参数，是React合成的一个对象，该对象类似于真实DOM的事件参数
+   1. stopPropagation，阻止事件在虚拟DOM树中冒泡
+   2. nativeEvent，可以得到真实的DOM事件对象
+   3. 为了提高执行效率，React使用事件对象池来处理事件对象（节约内存空间，重用之前的事件对象）
+
+
+**注意事项**
+
+1. 如果给真实的DOM注册事件，阻止了事件冒泡，则会导致react的相应事件无法触发
+2. 如果给真实的DOM注册事件，事件会先于React事件运行
+3. 通过React的事件中阻止事件冒泡，无法阻止真实的DOM事件冒泡
+4. 可以通过nativeEvent.stopImmediatePropagation()，阻止document上剩余事件的执行
+5. 在事件处理程序中，不要异步的使用事件对象，如果一定要使用，需要调用persist函数，使事件对象持久化
 
 ## 渲染原理
 
@@ -1527,9 +1567,9 @@ React为了提高对比效率，做出以下假设
 2. 不同的节点类型会生成不同的结构
    1. 相同的节点类型：节点本身类型相同，如果是由React元素生成，type值还必须一致
    2. 其他的，都属于不相同的节点类型
-3. 多个兄弟通过唯一标识（key）来确定对比的新节点
+3. 多个兄弟通过唯一标识（key）来确定对比的新节点,如果没有key值是通过原来的index来对比
 
-key值的作用：用于通过旧节点，寻找对应的新节点，如果某个旧节点有key值，则其更新时，会寻找相同层级中的相同key值的节点，进行对比。
+key值的作用：用于通过旧节点，寻找对应的新节点，如果某个旧节点有key值，则其更新时，会寻找相同层级中的相同key值的节点，进行对比.
 
 **key值应该在一个范围内唯一（兄弟节点中），并且应该保持稳定**
 
@@ -1777,6 +1817,30 @@ export default function App() {
 
             setN(prevN => prevN + 1); //传入的函数，在事件完成之后统一运行
             setN(prevN => prevN + 1);
+        }}>+</button>
+    </div>
+}
+```
+
+9. 如果你想要在使用setState之后，使用改变之后的值去调用一些回调函数，应该使用如下方法。
+
+```js
+export default function App() {
+    console.log("App render")
+    const [n, setN] = useState(0);
+
+    useEffect(()=>{
+        console.log(n)
+    },[n])
+    // 在改变状态后触发回调函数
+    return <div>
+        <button onClick={() => {
+            setN(prevN => prevN - 1); //传入的函数，在事件完成之后统一运行
+        }}>-</button>
+        <span>{n}</span>
+        <button onClick={() => {
+
+            setN(prevN => prevN + 1); //传入的函数，在事件完成之后统一运行
         }}>+</button>
     </div>
 }
