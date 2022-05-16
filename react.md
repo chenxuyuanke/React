@@ -1408,12 +1408,12 @@ export default class ErrorBound extends PureComponent {
    2. 空节点：什么都不做,但是节点对象是存在的
    3. 数组节点：遍历数组，将数组每一项递归创建节点（回到第1步进行反复操作，直到遍历结束）
    4. DOM节点：通过document.createElement创建真实的DOM对象，然后立即设置该真实DOM元素的各种属性，然后遍历对应React元素的children属性，递归操作（回到第1步进行反复操作，直到遍历结束）
-   5. 组件节点
-      1. 函数组件：调用函数(该函数必须返回一个可以生成节点的内容)，将该函数的返回结果递归生成节点（回到第1步进行反复操作，直到遍历结束）
+   5. 组件节点（单根元素）
+      1. 函数组件：调用函数(该函数必须返回一个可以生成节点的内容)，将该函数的返回结果递归生成节点（回到第1步进行反复操作,当children为数组时，会循环遍历）
       2. 类组件：
-         1. 创建该类的实例
+         1. 创建该类的实例，该节点会持有该实例对象
          2. 立即调用对象的生命周期方法：static getDerivedStateFromProps
-         3. 运行该对象的render方法，拿到节点对象（将该节点递归操作，回到第1步进行反复操作）
+         3. 运行该对象的render方法，拿到节点对象（将该节点递归操作，回到第1步进行反复操作，当children为数组时，会循环遍历）
          4. 将该组件的componentDidMount加入到执行队列（先进先出，先进先执行），当整个虚拟DOM树全部构建完毕，并且将真实的DOM对象加入到容器中后，执行该队列
 3. 生成出虚拟DOM树之后，将该树保存起来，以便后续使用
 4. 将之前生成的真实的DOM对象，加入到容器中。
@@ -1508,7 +1508,7 @@ ReactDOM.render(app, document.getElementById('root'));
 后续步骤：(2种节点更新都要做后续步骤)
 1. 更新虚拟DOM树
 2. 完成真实的DOM更新
-3. 依次调用执行队列中的componentDidMount
+3. 依次调用执行队列中的componentDidMount（更新数组也可能导致组件的挂载和卸载）
 4. 依次调用执行队列中的getSnapshotBeforeUpdate
 5. 依次调用执行队列中的componentDidUpdate
 6. 依次调用执行队列中的componentDidUnmount
@@ -1571,7 +1571,7 @@ key值的作用：用于通过旧节点，寻找对应的新节点，如果某�
 
 - **不一致**
 
-整体上，卸载旧的节点，全新创建新的节点
+整体上，先全新创建新的节点，后卸载旧的节点，
 
 **创建新节点**
 
@@ -1585,6 +1585,33 @@ key值的作用：用于通过旧节点，寻找对应的新节点，如果某�
    2. 调用该节点的componentWillUnMount函数
    3. 递归卸载子节点
 
+**所以只是局部更新，尽量不要改变节点类型和节点结构，会大大消耗性能，实在需要改变，可以用空节点代替来实现不改变节点结构**
+
+```js
+ render() {
+        // if (this.state.visible) {
+        //     return <div>
+        //         <h1>标题</h1>
+        //         <button onClick={() => {
+        //             this.setState({
+        //                 visible: !this.state.visible
+        //             })
+        //         }}>显示/隐藏</button>
+        //     </div>;
+        // }
+        const h1 = this.state.visible? <h1>标题</h1> : null;
+        return (
+            <div>
+                {h1}
+                <button onClick={() => {
+                    this.setState({
+                        visible: !this.state.visible
+                    })
+                }}>显示/隐藏</button>
+            </div>
+        )
+    }
+```
 
 #### 没有找到对比的目标
 
