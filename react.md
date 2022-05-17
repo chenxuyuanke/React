@@ -1974,7 +1974,7 @@ function App() {
             clearInterval(timer);
         }
     }, [])
-    
+
     // 正确做法
      const [n, setN] = useState(10)
     useEffect(() => {
@@ -2044,6 +2044,77 @@ export default function useAllStudents() {
 > 使用Hook的时候，如果没有严格按照Hook的规则进行，eslint的一个插件（eslint-plugin-react-hooks）会报出警告
 **主要用于解决横切关注点时,使用高阶组件和renderProps时过于复杂和冗余**
 
+自定义 Hook 是一种重用状态逻辑的机制)，所以在不同组件中使用自定义 Hook 时，其中的所有 state 和副作用都是完全隔离的。
+
+## Reducer Hook
+
+Flux：Facebook出品的一个数据流框架
+
+1. 规定了数据是单向流动的
+2. 数据存储在数据仓库中（目前，可以认为state就是一个存储数据的仓库）
+3. action是改变数据的唯一原因（本质上就是一个对象，action有两个属性）
+   1. type：字符串，动作的类型
+   2. payload：任意类型，动作发生后的附加信息
+   3. 例如，如果是添加一个学生，action可以描述为：
+      1. ```{ type:"addStudent", payload: {学生对象的各种信息} }```
+   4. 例如，如果要删除一个学生，action可以描述为：
+      1. ```{ type:"deleteStudent", payload: 学生id }```
+4. 具体改变数据的是一个函数，该函数叫做reducer
+   1. 该函数接收两个参数
+      1. state：表示当前数据仓库中的数据
+      2. action：描述了如何去改变数据，以及改变数据的一些附加信息
+   2. 该函数必须有一个返回结果，用于表示数据仓库变化之后的数据
+      1. Flux要求，对象是不可变的，如果返回对象，必须创建新的对象
+   3. reducer必须是纯函数，不能有任何副作用
+5. 如果要触发reducer，不可以直接调用，而是应该调用一个辅助函数dispatch
+   1. 该函数仅接收一个参数：action
+   2. 该函数会间接去调用reducer，以达到改变数据的目的
+
+```js
+import React from "react"
+import useReducer from "./useReducer"
+
+/**
+ * 该函数，根据当前的数据，已经action，生成一个新的数据
+ * @param {*} state 
+ * @param {*} action 
+ */
+function reducer(state, action) {
+    switch (action.type) {
+        case "increase":
+            return state + 1;
+        case "decrease":
+            if (state === 0) {
+                return 0;
+            }
+            return state - 1;
+        default:
+            return state;
+    }
+}
+
+export default function App() {
+    const [n, dispatch] = useReducer(reducer, 10, (args) => {
+        console.log(args)
+        return 100
+    });
+    //第三个参数不常用，是一个函数，接受的第一个参数是初始值，函数返回值是真正的初始值，如需要经过复杂计算的得到初始值
+    return (
+        <div>
+            <button onClick={() => {
+                dispatch({ type: "decrease" })
+            }}>-</button>
+            <span>{n}</span>
+            <button onClick={() => {
+                dispatch({ type: "increase" })
+            }}>+</button>
+        </div>
+    )
+}
+```
+
+抽离数据处理逻辑，不仅可以复用，让组件更加纯粹，更容易维护和数据调试。
+
 ## Context Hook
 
 用于获取上下文数据,使用了Provider必须提供值,否则默认值会失效,被underfind覆盖!
@@ -2057,7 +2128,7 @@ const ctx = React.createContext({
 // 设置默认值
 
 // function Test() {
-//     return <ctx.Consumer value={{a:20}}>
+//     return <ctx.Consumer>
 //         {value => <h1>Test，上下文的值：{value}</h1>}
 //     </ctx.Consumer>
 // }
@@ -2136,7 +2207,9 @@ function Parent() {
 
 ## Memo Hook
 
-用于保持一些比较稳定的数据（如复杂计算，生成大量React结果），通常用于性能优化 (比useCallBack应用范围更广,固定任何返回值)
+用于保持一些比较稳定的数据（如复杂计算，生成大量React元素），通常用于性能优化 (比useCallBack应用范围更广,固定任何返回值)
+
+返回函数调用的结果，如果依赖数据不改变，直接返回之前的返回值
 
 > useMemo和React.memo完全没有关系
 ```js
@@ -2165,7 +2238,8 @@ function Parent() {
 }
 ```
 
-**如果React元素本身的引用没有发生变化，一定不会重新渲染**
+**如果React元素本身的引用没有发生变化，不需要重新创建React节点，一定不会重新渲染**
+
 ```js
 import React, { useState, useMemo } from 'react'
 
@@ -2193,7 +2267,9 @@ export default function App() {
         <div>
             <ul>
                 {list}
-                // <Item key={i} value={i}></Item> 这样子会不断通过React.createElement()重新创建元素
+                // 固定了react元素的引用，引用不变，不需要重新创建元素
+                {list.map(it=>(<Item key={i} value={i}></Item>))}
+                // 在jsx表达式中，每次都会通过React.createElement()重新创建元素
 
             </ul>
             <input type="number"
@@ -2215,6 +2291,7 @@ useRef函数：
 2. 返回一个固定的对象，```{current: 默认值}```
 3. 固定一个唯一地址的对象（如一个React组件，同一个函数创建的不同组件的定时器）
 4. 在函数组件尽量不要使用createRef(),因为每次创建一个不同ref地址
+5. 也不能把createRef()写在函数外，会导致ref全局通用，多个组件公用一个ref
 
 ```js
 import React, { useState, useRef } from 'react'
@@ -2241,9 +2318,34 @@ export default function App() {
 }
 ```
 
-一个React节点(组件)必须只能固定一个唯一的ref对象
+同一个React节点(组件),多次调用，共享一个Ref对象，使用多个App为多个React节点
 
 ```js
+import React, { useState, useEffect } from 'react'
+
+let timer ;
+export default function App() {
+    const [n, setN] = useState(10)
+    useEffect(() => {
+        if (n === 0) {
+            return;
+        }
+        timer = setTimeout(() => {
+            console.log(n)
+            setN(n - 1)
+        }, 1000)
+        return () => {
+            clearTimeout(timer);
+        }
+    }, [n])
+    return (
+        <div>
+            <h1>{n}</h1>
+        </div>
+    )
+}
+// 这样子写会导致有多个App组件 共用一个timer，清除一个App的定时器会导致其他App的定时器也被清除
+
 import React, { useState, useRef, useEffect } from 'react'
 export default function App() {
     const [n, setN] = useState(10)
@@ -2267,6 +2369,129 @@ export default function App() {
     )
 }
 
+```
+
+利用useRef多次调用函数，共用一个对象的特性，使用共享数据，如setInterval
+
+```js
+import React, { useState, useRef, useEffect } from 'react'
+export default function App() {
+    const [n, setN] = useState(10)
+    const nRef = useRef(n); // {current:10}
+    useEffect(() => {
+        const timer = setInterval(() => {
+            nRef.current--;
+            setN(nRef.current);
+            if(nRef.current === 0){
+                clearInterval(timer);
+            }
+        }, 1000)
+        return () => {
+            clearInterval(timer);
+        }
+    }, [])
+    return (
+        <div>
+            <h1>{n}</h1>
+        </div>
+    )
+}
+```
+
+## useImperativeHandle Hook
+useImperativeHandle 可以让你在使用 ref 时自定义暴露给父组件的实例值。在
+大多数情况下，应当避免使用 ref 这样的命令式代码。
+useImperativeHandle 应当与 forwardRef 一起使用：
+
+```js
+function Test(props, ref) {
+    useImperativeHandle(ref, () => {
+        //如果不给依赖项，则每次运行函数组件都会调用该方法 返回值做为current的属性值
+        //如果使用了依赖项，则第一次调用后，会进行缓存，只有依赖项发生变化时才会重新调用函数
+        return {
+            method(){
+                console.log("Test Component Called")
+            }
+        }
+    }, [])
+    return <h1>Test Component</h1>
+}
+
+const TestWrapper = React.forwardRef(Test)
+
+export default function App() {
+    // const [, forceUpdate] = useState({})
+    const testRef = useRef();
+    return (
+        <div>
+            <TestWrapper ref={testRef} />
+            <button onClick={() => {
+                testRef.current.method();
+                // console.log(testRef)
+            }}>点击调用Test组件的method方法</button>
+        </div>
+    )
+}
+```
+
+## LayoutEffect Hook
+
+useEffect：浏览器渲染完成后，用户看到新的渲染结果之后
+useLayoutEffectHook：完成了DOM改动，但还没有呈现给用户
+useEffect和useLayoutEffectHook 其他用法完全一样，只是运行时间点不一样。
+
+运行顺序: dom操作 ->  useLayoutEffect -> 等待浏览器渲染 -> useEffect
+
+useLayoutEffect 与 componentDidMount、componentDidUpdate 的调用阶段是一样的,常用于dom操作
+
+应该尽量使用useEffect，因为它不会导致渲染阻塞，如果出现了问题，再考虑使用useLayoutEffectHook
+
+```js
+export default function App() {
+    const [n, setN] = useState(0)
+    const h1Ref = useRef();
+    useLayoutEffect(() => {
+        h1Ref.current.innerText = Math.random().toFixed(2);
+    })
+    return (
+        <div>
+            <h1 ref={h1Ref}>{n}</h1>
+            <button onClick={() => {
+                setN(n + 1)
+            }}>+</button>
+        </div>
+    )
+}
+// 常用于dom操作时决绝页面闪烁问题
+```
+
+## DebugValue Hook
+
+useDebugValue：用于将自定义Hook的关联数据显示到调试栏
+
+如果创建的自定义Hook通用性比较高，可以选择使用useDebugValue方便调试
+
+```js
+import React, { useState, useEffect, useDebugValue } from 'react'
+
+function useTest(){
+    const [students, ] = useState([])
+    useDebugValue("学生集合")
+    return students;
+}
+
+export default function App() {
+    useState(0)
+    useState("abc")
+    useEffect(() => {
+        console.log("effect")
+    }, [])
+    useTest();
+    return (
+        <div>
+        </div>
+    )
+}
 ```
 
 # Router
