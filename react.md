@@ -1987,6 +1987,8 @@ export default function useAllStudents() {
 > 使用Hook的时候，如果没有严格按照Hook的规则进行，eslint的一个插件（eslint-plugin-react-hooks）会报出警告
 **主要用于解决横切关注点时,使用高阶组件和renderProps时过于复杂和冗余**
 
+自定义hook和高阶组件相比？高阶组件会改变组件结构，区分更加细致
+
 ## Context Hook
 
 用于获取上下文数据,使用了Provider必须提供值,否则默认值会失效,被underfind覆盖!
