@@ -2318,7 +2318,7 @@ export default function App() {
 }
 ```
 
-同一个React节点(组件),多次调用，共享一个Ref对象，使用多个App为多个React节点
+useRef为同一个React组件,多次调用，跨越多次渲染，提供一个共享Ref对象。多次使用App为多个React节点。
 
 ```js
 import React, { useState, useEffect } from 'react'
