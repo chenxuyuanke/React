@@ -162,7 +162,7 @@ React Developer Tools
 - 本质是一个JS对象，会被babel编译，最终会被转换为React.createElement
 - 每个JSX表达式，有且仅有一个根节点
   - React.Fragment
-  - <></>
+  - <></> (简写)
 - 根节点外面最好加上（），表示这是一个表达式
 - 每个JSX元素必须结束（XML规范）要么双标签 要么单标签加/
 
@@ -188,8 +188,9 @@ React Developer Tools
       </div>
   );
 ```
-- 防止注入攻击(都是innerText)
-  - 自动编码 
+- 如果数据包含某些特殊字符，是不够的安全的，如果数据来源是用户输入，就更不安全了，用户可以手动注入script脚本来执行，所以React出于安全性考虑，用innerText自动编码数据,防止注入攻击
+
+- 如果确认数据是安全的，也确实有这种需求展示HTML内容
   - dangerouslySetInnerHTML
   ```jsx
     const content = "<h1>afasfasfd</h1><p>阿斯顿法定发送</p>";
@@ -269,7 +270,7 @@ React Developer Tools
 
 **组件无法改变自身的属性**。
 
-之前学习的React元素，可以对比内置组件和手写组件的props，本质上，就是一个组件（内置组件）
+之前学习的React元素，可以对比内置组件和自定义组件的props，本质上，就是一个组件（内置组件）
 
 React中的哲学：数据属于谁，谁才有权力改动，虽然react没有深层次监控传递过来的属性，但是千万不要改动。
 
@@ -2604,9 +2605,23 @@ React-Router 为我们提供了两个重要组件
 
 Route组件可以写到任意的地方，只要保证它是Router组件的后代元素
 
+类似Route的源码
+```js
+class Route extends React.Component {
+    render() {
+        if (是否匹配(this.props.path)) {
+            const Comp = this.props.component;
+            return <Comp />
+        }
+        return null;
+    }
+}
+```
+> **不同层次的Route的组件 path匹配无关，不是在之前匹配的path上继续匹配**
+
 ### Switch组件
 
-写到Switch组件中的Route组件，当匹配到第一个Route后，会立即停止匹配
+写到Switch组件中的Route组件，当匹配到第一个Route后，会立即停止匹配,可以利用这个特点实现匹配404页面来兜底
 
 由于Switch组件会循环所有子元素，然后让每个子元素去完成匹配，若匹配到，则渲染对应的组件，然后停止循环。因此，不能在Switch的子元素中使用除Route外的其他组件。
 
@@ -2624,10 +2639,11 @@ Router组件会创建一个上下文，并且，向上下文中注入一些信�
 
 1. React-Router中有两种模式：Hash、History，如果直接使用window.history，只能支持一种模式
 2. 当使用windows.history.pushState方法时，没有办法收到任何通知，将导致React无法知晓地址发生了变化，结果导致无法重新渲染组件
+3. 调用封装后的historty对象的方法，可以改变Router组件创建的上下文中的数据，从而导致其子组件重新渲染
 
 - push：将某个新的地址入栈（历史记录栈）
   - 参数1：新的地址
-  - 参数2：可选，附带的状态数据
+  - 参数2：可选，附带的状态数据,不常用
 - replace：将某个新的地址替换掉当前栈中的地址
 - go: 与window.history一致
 - forward: 与window.history一致
@@ -2645,8 +2661,10 @@ location对象中记录了当前地址的相关信息
 
 该对象中保存了，路由匹配的相关信息
 
-- isExact：事实上，当前的路径和路由配置的路径是否是精确匹配的
+- isExact：事实上，当前的路径和路由配置的路径是否是精确匹配的,与Route组件上的exact属性无关
 - params：获取路径规则中对应的数据
+
+实际上，在书写Route组件的path属性时，可以书写一个```string pattern```（字符串正则）
 
 ```jsx
 <Route path="/news/:year?/:month?/:day?" component={News} />
@@ -2654,7 +2672,6 @@ location对象中记录了当前地址的相关信息
 <Route path="/news/:year(\d+)/:month(\d+)/:day(\d+)/*" exact component={News} />
 // *代表任意名称
 ```
-实际上，在书写Route组件的path属性时，可以书写一个```string pattern```（字符串正则）
 
 react-router使用了第三方库：Path-to-RegExp，该库的作用是，将一个字符串正则转换成一个真正的正则表达式。
   
