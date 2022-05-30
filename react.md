@@ -2045,6 +2045,9 @@ export default function useAllStudents() {
 > 使用Hook的时候，如果没有严格按照Hook的规则进行，eslint的一个插件（eslint-plugin-react-hooks）会报出警告
 **主要用于解决横切关注点时,使用高阶组件和renderProps时过于复杂和冗余**
 
+<<<<<<< HEAD
+自定义hook和高阶组件相比？高阶组件会改变组件结构，区分更加细致
+=======
 自定义 Hook 是一种重用状态逻辑的机制)，所以在不同组件中使用自定义 Hook 时，其中的所有 state 和副作用都是完全隔离的。
 
 ## Reducer Hook
@@ -2115,6 +2118,7 @@ export default function App() {
 ```
 
 抽离数据处理逻辑，不仅可以复用，让组件更加纯粹，更容易维护和数据调试。
+>>>>>>> 6a6181f28607c26d9c37b1f68b830ec17fd2100d
 
 ## Context Hook
 
@@ -2600,8 +2604,9 @@ React-Router 为我们提供了两个重要组件
    4. strict：是否严格匹配最后一个斜杠
 2. component：匹配成功后要显示的组件
 3. children：
-   1. 传递React元素，无论是否匹配，一定会显示children，并且会忽略component属性
-   2. 传递一个函数，该函数有多个参数，这些参数来自于上下文，该函数返回react元素，则一定会显示返回的元素，并且忽略component属性
+   1. 只要参与了匹配，无论是否匹配，一定会显示children，并且会忽略component属性，在Switch组件中无效，因为匹配渲染的权利交给了Switch组件
+   2. 传递React元素
+   3. 传递一个函数，该函数有多个参数，这些参数来自于上下文，该函数返回react元素
 
 Route组件可以写到任意的地方，只要保证它是Router组件的后代元素
 
