@@ -374,6 +374,8 @@ React中的哲学：数据属于谁，谁才有权力改动，虽然react没有�
     }
     // 这样子写完方法不在原型上而在对象上，效率最高
 ```
+
+3. 直接写在函数调用位置
 ```js
       <Tick number={10} onClick={this.handleClick} 
         onOver={()=>{
@@ -483,6 +485,8 @@ React < 16.0.0
 10. **componentWillUnmount** 组件即将被销毁
     1.  通常在该函数中销毁一些组件依赖的资源，比如计时器
 
+![旧版生命周期](assets/截屏2022-05-31%2014.15.06.png)
+
 ### 新版生命周期
 
 React >= 16.0.0
@@ -499,6 +503,8 @@ React官方认为，某个数据的来源必须是单一的
    1. 真实的DOM构建完成，但还未实际渲染到页面中。
    2. 在该函数中，通常用于实现一些附加的dom操作
    3. 该函数的返回值，会作为componentDidUpdate的第三个参数
+
+![新版生命周期](assets/截屏2022-05-31%2014.16.12.png)
 
 ## 传递元素内容
 
@@ -741,6 +747,13 @@ PropTypes.exact({...})：//对象必须精确匹配传递的数据
 属性: function(props, propName, componentName) {
    //...
 }
+
+import React, { Component } from 'react'
+import PropTypes from "prop-types";
+
+static propTypes = {
+      b:PropTypes.bool.isRequired
+}
 ```
 
 
@@ -831,11 +844,11 @@ export default class App extends React.Component {
 
 reference: 引用
 
-场景：希望直接使用dom元素中的某个方法，或者希望直接使用自定义组件中的某个方法
+场景：希望直接使用dom元素中的某个方法，或者希望直接使用自定义组件的中实例对象的某个方法
 
 1. ref作用于内置的html组件，得到的将是真实的dom对象
 2. ref作用于类组件，得到的将是类的实例
-3. ref不能作用于函数组件
+3. ref不能作用于函数组件（因为函数组件并没有实例对象，并且获取不到函数内部的自定义方法，所以没有意义，但可以使用forwardRef 和 useImperativeHandle，手动控制暴露的ref对象）
 
 ref不再推荐使用字符串赋值，字符串赋值的方式将来可能会被移出
 
@@ -1131,7 +1144,7 @@ export default class NewContext extends Component {
         )
     }
 }
-//通过把ctx的数据作为state的一部分来实现性能优化，否则每次强制刷新，传入的都是一个新的对象，应用值不同就一定会重新渲染
+//通过把ctx的数据作为state的一部分来实现性能优化，否则每次强制刷新，传入的都是一个新的,引用值地址不同就一定会重新渲染。
 ```
 ### 上下文的应用场景
 
@@ -1179,8 +1192,8 @@ PureComponent是一个组件,如果某个子组件继承自该组件,则该组�
 ```js
 function ObjectEqual(obj1,obj2){
     for (const prop in obj1) {
-        if (Object.is(obj1[prop],obj1[prop])) {
-            return false;
+        if (!Object.is(obj1[prop],obj2[prop])) {
+            return true;
         }
     }
     return false
@@ -1405,9 +1418,9 @@ export default class ErrorBound extends PureComponent {
 
 1. 给document注册事件
 2. 几乎所有的元素的事件处理，均在document的事件中处理
-   1. 一些不冒泡的事件，是直接在元素上监听
-   2. 一些document上面没有的事件，直接在元素上监听
-3. 在document的事件处理，React会根据虚拟DOM树的完成事件函数的调用
+   1. 一些不冒泡的事件，是直接在元素上监听（onFoucs）
+   2. 一些document上面没有的事件，直接在元素上监听（onPlay,onStop）
+3. 在document的事件处理，React会根据虚拟DOM树的结构完成事件函数的调用,事件冒泡，从底层往上触发
 4. React的事件参数，并非真实的DOM事件参数，是React合成的一个对象，该对象类似于真实DOM的事件参数
    1. stopPropagation，阻止事件在虚拟DOM树中冒泡
    2. nativeEvent，可以得到真实的DOM事件对象
@@ -1417,10 +1430,10 @@ export default class ErrorBound extends PureComponent {
 **注意事项**
 
 1. 如果给真实的DOM注册事件，阻止了事件冒泡，则会导致react的相应事件无法触发
-2. 如果给真实的DOM注册事件，事件会先于React事件运行
+2. 如果给真实的DOM注册事件，事件会先于React事件运行，因为React事件要先等到冒泡到document才被触发
 3. 通过React的事件中阻止事件冒泡，无法阻止真实的DOM事件冒泡
-4. 可以通过nativeEvent.stopImmediatePropagation()，阻止document上剩余事件的执行
-5. 在事件处理程序中，不要异步的使用事件对象，如果一定要使用，需要调用persist函数，使事件对象持久化
+4. 可以通过nativeEvent.stopImmediatePropagation()，阻止document上剩余事件的执行，阻止第三方插件给dom注册的事件。
+5. 在事件处理程序中，不要异步的使用事件对象（因为事件对象会被重用），如果一定要使用，需要调用persist函数，使之前的事件对象持久化，效率会低一点。
 
 ## 渲染原理
 
