@@ -2044,9 +2044,7 @@ export default function useAllStudents() {
 > 使用Hook的时候，如果没有严格按照Hook的规则进行，eslint的一个插件（eslint-plugin-react-hooks）会报出警告
 **主要用于解决横切关注点时,使用高阶组件和renderProps时过于复杂和冗余**
 
-<<<<<<< HEAD
 自定义hook和高阶组件相比？高阶组件会改变组件结构，区分更加细致
-=======
 自定义 Hook 是一种重用状态逻辑的机制)，所以在不同组件中使用自定义 Hook 时，其中的所有 state 和副作用都是完全隔离的。
 
 ## Reducer Hook
@@ -2117,7 +2115,6 @@ export default function App() {
 ```
 
 抽离数据处理逻辑，不仅可以复用，让组件更加纯粹，更容易维护和数据调试。
->>>>>>> 6a6181f28607c26d9c37b1f68b830ec17fd2100d
 
 ## Context Hook
 
