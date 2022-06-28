@@ -2058,9 +2058,7 @@ export default function useAllStudents() {
 > 使用Hook的时候，如果没有严格按照Hook的规则进行，eslint的一个插件（eslint-plugin-react-hooks）会报出警告
 **主要用于解决横切关注点时,使用高阶组件和renderProps时过于复杂和冗余**
 
-<<<<<<< HEAD
 自定义hook和高阶组件相比？高阶组件会改变组件结构，区分更加细致
-=======
 自定义 Hook 是一种重用状态逻辑的机制)，所以在不同组件中使用自定义 Hook 时，其中的所有 state 和副作用都是完全隔离的。
 
 ## Reducer Hook
@@ -2131,7 +2129,6 @@ export default function App() {
 ```
 
 抽离数据处理逻辑，不仅可以复用，让组件更加纯粹，更容易维护和数据调试。
->>>>>>> 6a6181f28607c26d9c37b1f68b830ec17fd2100d
 
 ## Context Hook
 
@@ -2516,7 +2513,7 @@ export default function App() {
 
 ## React Router 概述
 
-React路由
+React路由：动态路由 Vue-Router静态路由 没有那么灵活
 
 ### 站点
 
@@ -2620,6 +2617,7 @@ React-Router 为我们提供了两个重要组件
    1. 只要参与了匹配，无论是否匹配，一定会显示children，并且会忽略component属性，在Switch组件中无效，因为匹配渲染的权利交给了Switch组件
    2. 传递React元素
    3. 传递一个函数，该函数有多个参数，这些参数来自于上下文，该函数返回react元素
+4. render:和renderProps一模一样，参数为上下文数据，和children的区别是只有匹配成功后才运行
 
 Route组件可以写到任意的地方，只要保证它是Router组件的后代元素
 
@@ -2681,6 +2679,8 @@ location对象中记录了当前地址的相关信息
 
 - isExact：事实上，当前的路径和路由配置的路径是否是精确匹配的,与Route组件上的exact属性无关
 - params：获取路径规则中对应的数据
+- path：路径规则
+- url：真实路径中匹配到规则的那一部分
 
 实际上，在书写Route组件的path属性时，可以书写一个```string pattern```（字符串正则）
 
@@ -2772,11 +2772,54 @@ function News(props) {
   - 字符串
   - 对象
 - push: 默认为false，表示跳转使用替换的方式，设置为true后，则使用push的方式跳转
-- from：当匹配到from地址规则时才进行跳转
+- from：当匹配到from地址规则时才进行跳转，并且可以把匹配的数据传递给to
 - exact: 是否精确匹配from
 - sensitive：from匹配时是否区分大小写
 - strict：from是否严格匹配最后一个斜杠
-  
+
+### 嵌套路由
+- 方案1.解耦合，利用match.url获取父路由匹配的路径
+- 方案2.配置RouterConfig，非常灵活
+
+### 受保护的页面
+- 方案1.高阶组件
+- 方案2.自定义路由组件 ProtectedRoute（1.利用url返回之前的页面；2.利用state不显示在地址栏；3.Redirect增加push属性，利用history跳回）
+
+### 导航守卫
+
+导航守卫：当离开一个页面，进入另一个页面时，触发的事件
+
+history对象
+
+- listen: 添加一个监听器，监听地址的变化，当地址发生变化时，会调用传递的函数
+  - 参数：函数，运行时间点：发生在即将跳转到新页面时
+    - 参数1：location对象，记录当前的地址信息
+    - 参数2：action，一个字符串，表示进入该地址的方式
+      - POP：出栈
+        - 通过点击浏览器后退、前进
+        - 调用history.go
+        - 调用history.goBack
+        - 调用history.goForward
+      - PUSH：入栈
+        - history.push
+      - REPLACE：替换
+        - history.replace
+  - 返回结果：函数，可以调用该函数取消监听
+- block：设置一个阻塞，并同时设置阻塞消息，当页面发生跳转时，会进入阻塞，并将阻塞消息传递到路由根组件的getUserConfirmation方法。
+  - 返回一个回调函数，用于取消阻塞器
+
+
+路由根组件
+
+- getUserConfirmation
+  - 参数：函数
+    - 参数1：阻塞消息
+      - 字符串消息
+      - 函数，函数的返回结果是一个字符串，用于表示阻塞消息
+        - 参数1：location对象
+        - 参数2：action值
+    - 参数2：回调函数，调用该函数并传递true，则表示进入到新页面，否则，不做任何操作
+
 # Redux
 
 ## Redux核心概念
